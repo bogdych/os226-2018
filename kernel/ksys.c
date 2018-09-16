@@ -107,22 +107,33 @@ static const struct cpio_old_hdr *find_exe(char *name) {
 	return found;
 }
 
+void *mem_alloc(size_t size) {
+	int curr_ptr = kernel_globals.stack_top;
+	kernel_globals.stack_ptr[kernel_globals.stack_top] = kernel_globals.mem_ptr;
+	kernel_globals.mem_ptr += size;
+	kernel_globals.stack_top++;
+	return kernel_globals.stack_ptr[curr_ptr];
+}
+
 void *load(char *name, void **entry) {
 	const struct cpio_old_hdr *ch = find_exe(name);
 	if (!ch) {
 		return NULL;
 	}
 
-	// http://www.sco.com/developers/gabi/latest/contents.html
 	const char *rawelf = cpio_content(ch);
 
-	// IMPL ME
-	rawelf = rawelf;
-	return NULL;
+	Elf64_Ehdr *e_header = (Elf64_Ehdr*) rawelf;
+ 	Elf64_Phdr *p_header = (Elf64_Phdr*) (rawelf + e_header->e_phoff);
+ 	void *mark = alloc(p_header->p_memsz);
+ 	memcpy(mark + p_header->p_vaddr, rawelf + p_header->p_offset, p_header->p_memsz);
+	*entry = mark + e_header->e_entry;
+	return mark;
 }
 
 void unload(void *mark) {
-	// IMPL ME
+	kernel_globals.stack_top--;
+	kernel_globals.mem_ptr = kernel_globals.stack_ptr[kernel_globals.stack_top];
 }
 
 static void tramprun(unsigned long *args) {
