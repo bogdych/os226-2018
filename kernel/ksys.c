@@ -125,7 +125,7 @@ void *load(char *name, void **entry) {
 
 	Elf64_Ehdr *e_header = (Elf64_Ehdr*) rawelf;
  	Elf64_Phdr *p_header = (Elf64_Phdr*) (rawelf + e_header->e_phoff);
- 	void *mark = alloc(p_header->p_memsz);
+ 	void *mark = mem_alloc(p_header->p_memsz);
  	memcpy(mark + p_header->p_vaddr, rawelf + p_header->p_offset, p_header->p_memsz);
 	*entry = mark + e_header->e_entry;
 	return mark;
